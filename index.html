@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi dieta</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F1F5EF;--card:#fff;--ink:#17261F;--mute:#5C6B63;--line:#D3DCD0;--leaf:#2C7A4B;--leaf-ink:#fff;--sun:#E08A12;--tint:#E3EEE2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101A15;--card:#17241D;--ink:#E8F0E9;--mute:#9BAEA2;--line:#2A3A31;--leaf:#5BBF84;--leaf-ink:#0D1A12;--sun:#F2B24F;--tint:#1F3328}}
+:root[data-theme="dark"]{--bg:#101A15;--card:#17241D;--ink:#E8F0E9;--mute:#9BAEA2;--line:#2A3A31;--leaf:#5BBF84;--leaf-ink:#0D1A12;--sun:#F2B24F;--tint:#1F3328}
+html{background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+h1,h2{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0}
+h1{font-size:1.6rem;line-height:1.15;font-weight:700}
+h1::first-letter{text-transform:uppercase}
+h2{font-size:1.1rem;font-weight:600}
+.top{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.ring{width:112px;height:112px;flex:none}
+.ring path{fill:none;stroke:var(--line);stroke-width:9;stroke-linecap:round}
+.ring path.on{stroke:var(--leaf)}
+.ring text{fill:var(--ink);font:700 26px "Bricolage Grotesque",system-ui,sans-serif;text-anchor:middle}
+.pct{margin:4px 0 0;color:var(--mute)}
+.ok{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--tint);font-weight:600}
+.meal{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.meal.done{border-color:var(--leaf);background:var(--tint)}
+.meal header{display:flex;justify-content:space-between;align-items:baseline}
+.st{font-weight:600;color:var(--leaf)}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+button{font-family:inherit;cursor:pointer}
+.opts button{min-height:44px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;font-weight:600;font-size:.8rem;padding:0 2px}
+.opts button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.items{margin:0 0 12px;padding-left:20px}
+.hint{margin:0 0 12px;color:var(--mute);font-size:.92rem}
+.mark{width:100%;min-height:46px;border:0;border-radius:12px;background:var(--leaf);color:var(--leaf-ink);font-weight:600;font-size:1rem}
+.mark.undo{background:transparent;color:var(--ink);border:1px solid var(--leaf)}
+.mark:disabled{background:var(--line);color:var(--mute);cursor:not-allowed}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.hist{margin-top:28px}
+.hist ul{list-style:none;margin:10px 0 0;padding:0}
+.hist li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+@media (prefers-reduced-motion:no-preference){button{transition:background-color .15s}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const M=[
+["Desayuno",["Pan integral 100 g|Leche entera 350 ml|1 plátano (120-130 g)|Nueces 20 g","Pan integral 90 g|Leche entera 350 ml|1 manzana (180 g)|Almendras 20 g","Pan integral 100 g|Leche entera 350 ml|Queso fresco batido 0% o Skyr 250 g|1 naranja (200 g)","Pan integral 80 g|Leche entera 350 ml|Copos de avena 40 g|2 kiwis"]],
+["Media mañana",["Yogur griego natural 200 g|1 fruta|Almendras o nueces 20 g","Bocadillo de pan integral 60 g|Jamón serrano o lomo 60-70 g|1 fruta","Skyr o yogur alto en proteína 250 g|1 plátano|Nueces 15 g","Pan integral 50 g|Queso fresco batido 200 g|1 fruta"]],
+["Comida",["Arroz 110 g|Pechuga de pollo 180-200 g|Verdura 300 g|1 fruta","Pasta 110 g|Ternera magra o carne picada magra 180 g|Verdura 300 g","Patata 400 g|Merluza o bacalao 220 g|Ensalada o verdura 300 g","Alubias 90 g|Pechuga de pollo o pavo 150 g|Verdura 300 g"]],
+["Merienda",["Pan integral 100 g|Jamón serrano 80 g|1 plátano","Pan integral 100 g|Lomo embuchado 80 g|1 manzana","Pan integral 100 g|Pechuga de pavo 120 g|1 fruta","Pan integral 80 g|Jamón cocido extra 120 g|Nueces 20 g"]],
+["Cena",["Pechuga de pollo 180-200 g|Patata 250 g|Verdura o ensalada 300 g","Merluza o pescado blanco 220 g|Arroz 70 g|Verdura 300 g","Ternera magra 180 g|Pan integral 70 g|Ensalada 300 g","Salmón 160-180 g|Patata 250 g|Verdura 300 g"]]
+];
+const app=document.getElementById('app'),K='dieta-v1';
+let S={days:{}},ref=null,tm;
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+let cur=today();
+const blank=()=>({c:[null,null,null,null,null],d:[false,false,false,false,false]});
+const get=k=>S.days[k]||blank();
+const count=k=>get(k).d.filter(Boolean).length;
+const fmt=(k,o)=>new Date(k+'T12:00:00').toLocaleDateString('es-ES',o);
+function arc(i){const r=42,p=t=>(50+r*Math.cos(t)).toFixed(1)+' '+(50+r*Math.sin(t)).toFixed(1),a=(-90+i*72+5)*Math.PI/180,b=(-90+i*72+67)*Math.PI/180;return 'M'+p(a)+'A'+r+' '+r+' 0 0 1 '+p(b)}
+function save(){
+  try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}
+}
+function render(){
+  const f=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.k:null;
+  const d=get(cur),n=d.d.filter(Boolean).length;
+  let h='<div class="top"><svg class="ring" viewBox="0 0 100 100" role="img" aria-label="'+n+' de 5 comidas hechas">'+[0,1,2,3,4].map(i=>'<path d="'+arc(i)+'" class="'+(d.d[i]?'on':'')+'"/>').join('')+'<text x="50" y="59">'+n+'/5</text></svg><div><h1>'+fmt(cur,{weekday:'long',day:'numeric',month:'long'})+'</h1><p class="pct">Cumplimiento de hoy: '+n*20+' %</p></div></div>';
+  if(n===5)h+='<p class="ok">✅ ¡Día completo! Mañana empieza uno nuevo automáticamente.</p>';
+  M.forEach(([name,opts],i)=>{
+    const c=d.c[i],dn=d.d[i];
+    h+='<section class="meal'+(dn?' done':'')+'"><header><h2>'+name+'</h2>'+(dn?'<span class="st">✅ Hecha</span>':'')+'</header><div class="opts" role="group" aria-label="Opción de '+name.toLowerCase()+'">';
+    h+=opts.map((_,j)=>'<button data-k="o'+i+'-'+j+'" data-a="o" data-i="'+i+'" data-j="'+j+'" aria-pressed="'+(c===j)+'">Opción '+(j+1)+'</button>').join('')+'</div>';
+    h+=c===null?'<p class="hint">Toca una opción para ver qué toca y marcar la que has hecho.</p>':'<ul class="items">'+opts[c].split('|').map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+    h+='<button class="mark'+(dn?' undo':'')+'" data-k="m'+i+'" data-a="m" data-i="'+i+'"'+(c===null?' disabled':'')+'>'+(dn?'Quitar ✅':'Marcar como hecha')+'</button></section>';
+  });
+  const ks=Object.keys(S.days).filter(k=>k!==cur&&count(k)>0).sort().reverse().slice(0,30);
+  const full=Object.keys(S.days).filter(k=>count(k)===5).length;
+  h+='<section class="hist"><h2>Historial</h2><p class="pct">Días completos: '+full+'</p>';
+  h+=ks.length?'<ul>'+ks.map(k=>'<li><span>'+fmt(k,{weekday:'short',day:'numeric',month:'short'})+'</span><span>'+(count(k)===5?'✅ ':'')+count(k)+'/5</span></li>').join('')+'</ul>':'<p class="hint">Aquí aparecerán los días anteriores.</p>';
+  h+='</section>';
+  app.innerHTML=h;
+  if(f){const e=app.querySelector('[data-k="'+f+'"]');if(e&&!e.disabled)e.focus({preventScroll:true})}
+}
+app.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b||b.disabled)return;
+  const i=+b.dataset.i,d=S.days[cur]||(S.days[cur]=blank());
+  if(b.dataset.a==='o')d.c[i]=+b.dataset.j;else d.d[i]=!d.d[i];
+  save();render();
+});
+function tick(){const t=today();if(t!==cur){cur=t;render()}}
+setInterval(tick,30000);
+document.addEventListener('visibilitychange',tick);
+try{const s=JSON.parse(localStorage.getItem(K));if(s&&s.days)S=s}catch(e){}
+render();
+</script>
+</body>
+</html>
